@@ -217,7 +217,7 @@ ptrdiff_t c_hash_multiset_insert(c_hash_multiset *const _hash_multiset,
     size_t created = 0;
     if (select_chain == NULL)
     {
-        ++created;
+        created = 1;
         // Попытаемся создать цепочку.
         c_unique_chain *const new_chain = (c_unique_chain*)malloc(sizeof(c_unique_chain));
         if (new_chain == NULL)
@@ -325,7 +325,6 @@ ptrdiff_t c_hash_multiset_resize(c_hash_multiset *const _hash_multiset,
             size_t count = _hash_multiset->unique_count;
             for (size_t s = 0; (s < _hash_multiset->slots_count)&&(count > 0); ++s)
             {
-                // Тут что-то все поломалось... :(
                 if (((void**)_hash_multiset->slots)[s] != NULL)
                 {
                     c_unique_chain *select_chain = ((c_unique_chain**)_hash_multiset->slots)[s],
