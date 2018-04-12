@@ -38,13 +38,11 @@ int main()
                                                             1024,
                                                             0.5f);
 
-    c_hash_multiset_delete(hash_multiset, NULL);
-
     c_hash_multiset_resize(hash_multiset, 0);
 
     c_hash_multiset_resize(hash_multiset, 1024);
-
-    // ...
+    
+    c_hash_multiset_delete(hash_multiset, NULL);
 
     getchar();
     return 0;
