@@ -30,22 +30,83 @@ size_t comp_func_s(const void *const _a,
     return 0;
 }
 
+void print_func_s(const void *const _data)
+{
+    const char *const data = *((char**)_data);
+    printf("%s\n", data);
+    return;
+}
+
+void print_hash_multiset(const c_hash_multiset *const _hash_multiset)
+{
+    if (_hash_multiset == NULL) return;
+
+    printf("slots_count: %Iu\nnodes_count: %Iu\nunique_count: %Iu\nslots: %Iu\n",
+           _hash_multiset->slots_count,
+           _hash_multiset->nodes_count,
+           _hash_multiset->unique_count,
+           _hash_multiset->slots);
+
+    printf("elements:\n");
+    c_hash_multiset_for_each(_hash_multiset, print_func_s);
+    printf("\n\n");
+    return;
+}
+
 int main()
 {
+    // Создание хэш-мультимножества.
     c_hash_multiset *hash_multiset = c_hash_multiset_create(hash_func_s,
                                                             comp_func_s,
                                                             sizeof(char*),
-                                                            1024,
+                                                            11,
                                                             0.5f);
-
+    // Перестраиваем.
     c_hash_multiset_resize(hash_multiset, 0);
 
-    c_hash_multiset_resize(hash_multiset, 1024);
-    
+    const char *const data_one = "data one";
+    const char *const data_two = "data two";
+    const char *const data_three = "data three";
+
+    // Вставляем много данных.
+    c_hash_multiset_insert(hash_multiset, &data_one);
+    c_hash_multiset_insert(hash_multiset, &data_two);
+    c_hash_multiset_insert(hash_multiset, &data_three);
+    c_hash_multiset_insert(hash_multiset, &data_one);
+    c_hash_multiset_insert(hash_multiset, &data_one);
+
+    // Печать содержимого.
+    print_hash_multiset(hash_multiset);
+
+    // Перестраиваем.
+    c_hash_multiset_resize(hash_multiset, 17);
+
+    // Печать содержимого.
+    print_hash_multiset(hash_multiset);
+
+    // Вырезаем один элемент.
+    c_hash_multiset_erase(hash_multiset, &data_one, NULL);
+
+    // Печать содержимого.
+    print_hash_multiset(hash_multiset);
+
+    // Вырезаем один элемент.
+    c_hash_multiset_erase(hash_multiset, &data_one, NULL);
+
+    // Печать содержимого.
+    print_hash_multiset(hash_multiset);
+
+    // Проверка на наличие заданных данных.
+    printf("check data_one: %Id\n",
+           c_hash_multiset_check(hash_multiset, &data_one));
+
+    const char *const data_four = "data four";
+    printf("check data_four: %Id\n",
+           c_hash_multiset_check(hash_multiset, &data_four));
+
+    // Удаление хэш-мультимножества.
     c_hash_multiset_delete(hash_multiset, NULL);
 
     getchar();
     return 0;
 }
-
-// Функция c_hash_multiset_count() должна возвращать количество элементов с заданным ключом.

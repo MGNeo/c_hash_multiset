@@ -1,6 +1,7 @@
 ﻿#ifndef C_HASH_MULTISET_H
 #define C_HASH_MULTISET_H
 
+/*отладочное*/#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -62,6 +63,24 @@ ptrdiff_t c_hash_multiset_delete(c_hash_multiset *const _hash_multiset,
 ptrdiff_t c_hash_multiset_insert(c_hash_multiset *const _hash_multiset,
                                  const void *const _data);
 
+ptrdiff_t c_hash_multiset_erase(c_hash_multiset *const _hash_multiset,
+                                const void *const _data,
+                                void (*const _del_func)(void *const _data));
+
 ptrdiff_t c_hash_multiset_resize(c_hash_multiset *const _hash_multiset,
                                  const size_t _slots_count);
+
+ptrdiff_t c_hash_multiset_check(const c_hash_multiset *const _hash_multiset,
+                                const void *const _data);
+
+size_t c_hash_multiset_count(const c_hash_multiset *const _hash_multiset,
+                             const void *const _data);
+
+ptrdiff_t c_hash_multiset_for_each(const c_hash_multiset *const _hash_multiset,
+                                   void (*const _func)(const void *const _data));
+
+// clear
+
+// erase_all
+
 #endif
