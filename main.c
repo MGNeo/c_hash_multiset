@@ -61,8 +61,6 @@ int main()
                                                             sizeof(char*),
                                                             11,
                                                             0.5f);
-    // Перестраиваем.
-    c_hash_multiset_resize(hash_multiset, 0);
 
     const char *const data_one = "data one";
     const char *const data_two = "data two";
@@ -85,20 +83,14 @@ int main()
     print_hash_multiset(hash_multiset);
 
     // Вырезаем один элемент.
-    c_hash_multiset_erase(hash_multiset, &data_one, NULL);
-
-    // Печать содержимого.
-    print_hash_multiset(hash_multiset);
-
-    // Вырезаем один элемент.
-    c_hash_multiset_erase(hash_multiset, &data_one, NULL);
+    c_hash_multiset_erase(hash_multiset, &data_two, NULL);
 
     // Печать содержимого.
     print_hash_multiset(hash_multiset);
 
     // Проверка на наличие заданных данных.
-    printf("check data_one: %Id\n",
-           c_hash_multiset_check(hash_multiset, &data_one));
+    printf("check data_three: %Id\n",
+           c_hash_multiset_check(hash_multiset, &data_three));
 
     const char *const data_four = "data four";
     printf("check data_four: %Id\n",

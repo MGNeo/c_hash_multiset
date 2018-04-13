@@ -1,4 +1,18 @@
-﻿#ifndef C_HASH_MULTISET_H
+﻿/*
+    Заголовочный файл хэш-мультимножества c_hash_multiset
+    Разработка, отладка и сборка производилась в:
+    ОС: Windows 10/x64
+    IDE: Code::Blocks 17.12
+    Компилятор: default Code::Blocks 17.12 MinGW
+
+    Разработчик: Глухманюк Максим
+    Эл. почта: mgneo@yandex.ru
+    Место: Российская Федерация, Самарская область, Сызрань
+    Дата: 13.04.2018
+    Лицензия: GPLv3
+*/
+
+#ifndef C_HASH_MULTISET_H
 #define C_HASH_MULTISET_H
 
 /*отладочное*/#include <stdio.h>
