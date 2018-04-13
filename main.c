@@ -78,8 +78,8 @@ int main()
     // Печать содержимого.
     print_hash_multiset(hash_multiset);
 
-    // Перестраиваем.
-    c_hash_multiset_resize(hash_multiset, 17);
+    // Удаляем все экземпляры data_one.
+    c_hash_multiset_erase_all(hash_multiset, &data_one, NULL);
 
     // Печать содержимого.
     print_hash_multiset(hash_multiset);

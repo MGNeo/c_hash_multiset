@@ -241,12 +241,13 @@ ptrdiff_t c_hash_multiset_insert(c_hash_multiset *const _hash_multiset,
     }
 
     // Создадим и вставим узел в требуемую цепочку.
+    // Если узел не удалось создать, и если мы создавали цепочку, то удаляем ее,
+    // потому что пустая цепочка не должна существовать.
 
     // Определим размер создаваемого узла.
     const size_t new_node_size = sizeof(void*) + _hash_multiset->data_size;
     if (new_node_size < _hash_multiset->data_size)
     {
-        // Если была вставлена новая цепочка, удаляем ее.
         if (created == 1)
         {
             ((c_unique_chain**)_hash_multiset->slots)[presented_hash] = select_chain->next_chain;
@@ -260,7 +261,6 @@ ptrdiff_t c_hash_multiset_insert(c_hash_multiset *const _hash_multiset,
     void *const new_node = malloc(new_node_size);
     if (new_node == NULL)
     {
-        // Если была вставлена новая цепочка, удаляем ее.
         if (created == 1)
         {
             ((c_unique_chain**)_hash_multiset->slots)[presented_hash] = select_chain->next_chain;
@@ -536,4 +536,159 @@ ptrdiff_t c_hash_multiset_for_each(const c_hash_multiset *const _hash_multiset,
     }
 
     return 1;
+}
+
+// Очищает хэш-мультимножество ото всех данных, количество слотов сохраняется.
+// В случае успешного очищения возвращает > 0.
+// Если очищать не отчего, возвращает 0.
+// В случае ошибвки возвращает < 0.
+ptrdiff_t c_hash_multiset_clear(c_hash_multiset *const _hash_multiset,
+                                void (*const _del_func)(void *const _data))
+{
+    if (_hash_multiset == NULL) return -1;
+
+    if (_hash_multiset->nodes_count == 0) return 0;
+
+    size_t count = _hash_multiset->slots_count;
+    if (_del_func != NULL)
+    {
+        for (size_t s = 0; (s < _hash_multiset->slots_count)&&(count > 0); ++s)
+        {
+            if (((void**)_hash_multiset->slots)[s] != NULL)
+            {
+                c_unique_chain *select_chain = ((c_unique_chain**)_hash_multiset->slots)[s],
+                           *delete_chain;
+                while (select_chain != NULL)
+                {
+                    delete_chain = select_chain;
+                    select_chain = select_chain->next_chain;
+
+                    void *select_node = delete_chain->head,
+                         *delete_node;
+                    while (select_node != NULL)
+                    {
+                        delete_node = select_node;
+                        select_node = *((void**)select_node);
+
+                        _del_func( (uint8_t*)delete_node + sizeof(void*) );
+                        free(delete_node);
+                    }
+                    free(delete_chain);
+                }
+
+                ((void**)_hash_multiset->slots)[s] = NULL;
+            }
+        }
+    } else {
+        // Дублирование кода для того, чтобы на каждом узле не проверять,
+        // задана ли функция удаления данных.
+        for (size_t s = 0; (s < _hash_multiset->slots_count)&&(count > 0); ++s)
+        {
+            if (((void**)_hash_multiset->slots)[s] != NULL)
+            {
+                c_unique_chain *select_chain = ((c_unique_chain**)_hash_multiset->slots)[s],
+                           *delete_chain;
+                while (select_chain != NULL)
+                {
+                    delete_chain = select_chain;
+                    select_chain = select_chain->next_chain;
+
+                    void *select_node = delete_chain->head,
+                         *delete_node;
+                    while (select_node != NULL)
+                    {
+                        delete_node = select_node;
+                        select_node = *((void**)select_node);
+
+                        free(delete_node);
+                    }
+                    free(delete_chain);
+                }
+
+                ((void**)_hash_multiset->slots)[s] = NULL;
+            }
+        }
+    }
+    return 1;
+}
+
+// Удаляет из хэш-мультимножества все единицы заданных данных.
+// В случае успешного удаления возвращает > 0.
+// Если заданных данных в хэш-мультимножестве не оказалось, то возвращает 0.
+// В случае ошибки возвращает < 0.
+ptrdiff_t c_hash_multiset_erase_all(c_hash_multiset *const _hash_multiset,
+                                    const void *const _data,
+                                    void (* const _del_func)(void *const _data))
+{
+    if (_hash_multiset == NULL) return -1;
+    if (_data == NULL) return -2;
+
+    if (_hash_multiset->nodes_count == 0) return 0;
+
+    // Неприведенный хэш заданных данных.
+    const size_t hash = _hash_multiset->hash_func(_data);
+
+    // Приведенный хэш заданных данных.
+    const size_t presented_hash = hash % _hash_multiset->slots_count;
+
+    if (((void**)_hash_multiset->slots)[presented_hash] != NULL)
+    {
+        c_unique_chain *select_chain = ((c_unique_chain**)_hash_multiset->slots)[presented_hash],
+                       *prev_chain = &((c_unique_chain**)_hash_multiset->slots)[presented_hash];
+
+        while (select_chain != NULL)
+        {
+            // Неприведенный хэш цепи.
+            const size_t hash_c = select_chain->hash;
+            if (hash == hash_c)
+            {
+                // Данные цепи.
+                const void *const data_c = (uint8_t*)(select_chain->head) + sizeof(void*);
+                if (_hash_multiset->comp_func(_data, data_c) > 0)
+                {
+                    // Удаляем заданную цепь из хэш-мультимножества.
+                    void *select_node = select_chain->head,
+                         *delete_node;
+                    // Сперва удаляем все узлы цепи.
+                    if (_del_func != NULL)
+                    {
+                        while (select_node != NULL)
+                        {
+                            delete_node = select_node;
+                            select_node = *((void**)select_node);
+
+                            _del_func( (uint8_t*)delete_node + sizeof(void*) );
+                            free(delete_node);
+                        }
+                    } else {
+                        // Дублирование кода, чтобы на каждом узле не проверять,
+                        // задана ли функция удаления.
+                        while (select_node != NULL)
+                        {
+                            delete_node = select_node;
+                            select_node = *((void**)select_node);
+
+                            free(delete_node);
+                        }
+                    }
+
+                    // Уникальных цепей стало меньше на одну.
+                    --_hash_multiset->unique_count;
+                    // Элементов в хэш-мультимножестве стало меньше на количество элементов удаляемой цепи.
+                    _hash_multiset->nodes_count -= select_chain->count;
+
+                    // Ампутация.
+                    prev_chain->next_chain = select_chain->next_chain;
+
+                    free(select_chain);
+
+                    return 1;
+                }
+            }
+            prev_chain = select_chain;
+            select_chain = select_chain->next_chain;
+        }
+    }
+
+    return 0;
 }

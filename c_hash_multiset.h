@@ -79,8 +79,11 @@ size_t c_hash_multiset_count(const c_hash_multiset *const _hash_multiset,
 ptrdiff_t c_hash_multiset_for_each(const c_hash_multiset *const _hash_multiset,
                                    void (*const _func)(const void *const _data));
 
-// clear
+ptrdiff_t c_hash_multiset_clear(c_hash_multiset *const _hash_multiset,
+                                void (*const _del_func)(void *const _data));
 
-// erase_all
+ptrdiff_t c_hash_multiset_erase_all(c_hash_multiset *const _hash_multiset,
+                                    const void *const _data,
+                                    void (*const _del_func)(void *const _data));
 
 #endif
