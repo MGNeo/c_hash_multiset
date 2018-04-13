@@ -53,7 +53,7 @@ void print_hash_multiset(const c_hash_multiset *const _hash_multiset)
     return;
 }
 
-int main()
+int main(int argc, char **argv)
 {
     // Создание хэш-мультимножества.
     c_hash_multiset *hash_multiset = c_hash_multiset_create(hash_func_s,
