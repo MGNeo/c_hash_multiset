@@ -485,7 +485,7 @@ ptrdiff_t c_hash_multiset_for_each(const c_hash_multiset *const _hash_multiset,
 
 // Очищает хэш-мультимножество ото всех данных, количество слотов сохраняется.
 // В случае успешного очищения возвращает > 0.
-// Если очищать не отчего, возвращает 0.
+// Если очищать не от чего, возвращает 0.
 // В случае ошибвки возвращает < 0.
 ptrdiff_t c_hash_multiset_clear(c_hash_multiset *const _hash_multiset,
                                 void (*const _del_func)(void *const _data))
