@@ -108,5 +108,6 @@ int main(int argc, char **argv)
     c_hash_multiset_delete(hash_multiset, NULL);
 
     getchar();
+    
     return 0;
 }
