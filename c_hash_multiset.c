@@ -20,27 +20,25 @@
 c_hash_multiset *c_hash_multiset_create(size_t (*const _hash_func)(const void *const _data),
                                         size_t (*const _comp_func)(const void *const _a,
                                                                    const void *const _b),
-                                        const size_t _data_size,
                                         const size_t _slots_count,
                                         const float _max_load_factor)
 {
     if (_hash_func == NULL) return NULL;
     if (_comp_func == NULL) return NULL;
-    if (_data_size == 0) return NULL;
     if (_max_load_factor <= 0.0f) return NULL;
 
-    void *new_slots = NULL;
+    c_unique_chain **new_slots = NULL;
 
     if (_slots_count > 0)
     {
-        const size_t new_slots_size = _slots_count * sizeof(void*);
+        const size_t new_slots_size = _slots_count * sizeof(c_unique_chain*);
         if ( (new_slots_size == 0) ||
-             (new_slots_size / _slots_count != sizeof(void*)) )
+             (new_slots_size / _slots_count != sizeof(c_unique_chain*)) )
         {
             return NULL;
         }
 
-        new_slots = malloc(new_slots_size);
+        new_slots = (c_unique_chain**)malloc(new_slots_size);
         if (new_slots == NULL)
         {
             return NULL;
@@ -59,7 +57,6 @@ c_hash_multiset *c_hash_multiset_create(size_t (*const _hash_func)(const void *c
     new_hash_multiset->hash_func = _hash_func;
     new_hash_multiset->comp_func = _comp_func;
 
-    new_hash_multiset->data_size = _data_size;
     new_hash_multiset->slots_count = _slots_count;
     new_hash_multiset->nodes_count = 0;
     new_hash_multiset->unique_count = 0;
@@ -143,14 +140,13 @@ ptrdiff_t c_hash_multiset_insert(c_hash_multiset *const _hash_multiset,
     const size_t presented_hash = hash % _hash_multiset->slots_count;
 
     // Попытаемся найти в нужном слоте уникальную цепочку с требуемыми данными.
-    c_unique_chain *select_chain = ((c_unique_chain**)_hash_multiset->slots)[presented_hash];
+    c_unique_chain *select_chain = _hash_multiset->slots[presented_hash];
 
     while(select_chain != NULL)
     {
         if (hash == select_chain->hash)
         {
-            const void *const data_c = (uint8_t*)(select_chain->head) + sizeof(void*);
-            if (_hash_multiset->comp_func(_data, data_c) > 0)
+            if (_hash_multiset->comp_func(_data, select_chain->head->data) > 0)
             {
                 break;
             }
@@ -171,8 +167,8 @@ ptrdiff_t c_hash_multiset_insert(c_hash_multiset *const _hash_multiset,
         }
 
         // Встроим цепочку в слот.
-        new_chain->next_chain = ((c_unique_chain**)_hash_multiset->slots)[presented_hash];
-        ((void**)_hash_multiset->slots)[presented_hash] = new_chain;
+        new_chain->next_chain = _hash_multiset->slots[presented_hash];
+        _hash_multiset->slots[presented_hash] = new_chain;
 
         // Установим параметры цепи.
         new_chain->head = NULL;
@@ -189,37 +185,24 @@ ptrdiff_t c_hash_multiset_insert(c_hash_multiset *const _hash_multiset,
     // Если узел не удалось создать, и если мы создавали цепочку, то удаляем ее,
     // потому что пустая цепочка не должна существовать.
 
-    // Определим размер создаваемого узла.
-    const size_t new_node_size = sizeof(void*) + _hash_multiset->data_size;
-    if (new_node_size < _hash_multiset->data_size)
-    {
-        if (created == 1)
-        {
-            ((c_unique_chain**)_hash_multiset->slots)[presented_hash] = select_chain->next_chain;
-            free(select_chain);
-            --_hash_multiset->unique_count;
-        }
-        return -8;
-    }
-
     // Попытаемся выделить память под узел.
-    void *const new_node = malloc(new_node_size);
+    c_hash_multiset_node *const new_node = (c_hash_multiset_node*)malloc(sizeof(c_hash_multiset_node));
     if (new_node == NULL)
     {
         if (created == 1)
         {
-            ((c_unique_chain**)_hash_multiset->slots)[presented_hash] = select_chain->next_chain;
+            _hash_multiset->slots[presented_hash] = select_chain->next_chain;
             free(select_chain);
             --_hash_multiset->unique_count;
         }
         return -9;
     }
 
-    // Скопируем данные в узел.
-    memcpy((uint8_t*)new_node + sizeof(void*), _data, _hash_multiset->data_size);
+    // Свяжем узел с данными.
+    new_node->data = (void*)_data;
 
     // Вставим узел в нужную цепочку.
-    *((void**)new_node) = select_chain->head;
+    new_node->next = select_chain->head;
     select_chain->head = new_node;
     ++select_chain->count;
 
@@ -249,25 +232,20 @@ ptrdiff_t c_hash_multiset_erase(c_hash_multiset *const _hash_multiset,
     const size_t presented_hash = hash % _hash_multiset->slots_count;
 
     // Поиск цепи с заданными данными.
-    c_unique_chain *select_chain = ((c_unique_chain**)_hash_multiset->slots)[presented_hash];
+    c_unique_chain *select_chain = _hash_multiset->slots[presented_hash];
     while (select_chain != NULL)
     {
-        // Неприведенный хэш уникальной цепочки.
-        const size_t hash_c = select_chain->hash;
-
-        if (hash == hash_c)
+        if (hash == select_chain->hash)
         {
-            // Данные цепочки.
-            const void *const data_c = (uint8_t*)(select_chain->head) + sizeof(void*);
-            if (_hash_multiset->comp_func(_data, data_c) > 0)
+            if (_hash_multiset->comp_func(_data, select_chain->head->data) > 0)
             {
                 // Удаляем первый узел из требуемой цепи.
-                void *delete_node = select_chain->head;
-                select_chain->head = *((void**)(select_chain->head));
+                c_hash_multiset_node *delete_node = select_chain->head;
+                select_chain->head = select_chain->head->next;
 
                 if (_del_func != NULL)
                 {
-                    _del_func( (uint8_t*)delete_node + sizeof(void*) );
+                    _del_func( delete_node->data );
                 }
                 free(delete_node);
 
@@ -278,7 +256,7 @@ ptrdiff_t c_hash_multiset_erase(c_hash_multiset *const _hash_multiset,
                 if (select_chain->count == 0)
                 {
                     free(select_chain);
-                    ((void**)_hash_multiset->slots)[presented_hash] = NULL;
+                    _hash_multiset->slots[presented_hash] = NULL;
                     --_hash_multiset->unique_count;
                 }
                 return 1;
@@ -319,14 +297,14 @@ ptrdiff_t c_hash_multiset_resize(c_hash_multiset *const _hash_multiset,
 
         return 1;
     } else {
-        const size_t new_slots_size = _slots_count * sizeof(void*);
+        const size_t new_slots_size = _slots_count * sizeof(c_unique_chain*);
         if ( (new_slots_size == 0) ||
-             (new_slots_size / _slots_count != sizeof(void*)) )
+             (new_slots_size / _slots_count != sizeof(c_unique_chain*)) )
         {
             return -3;
         }
 
-        void *const new_slots = malloc(new_slots_size);
+        c_unique_chain **const new_slots = (c_unique_chain*)malloc(new_slots_size);
         if (new_slots == NULL)
         {
             return -4;
@@ -340,9 +318,9 @@ ptrdiff_t c_hash_multiset_resize(c_hash_multiset *const _hash_multiset,
             size_t count = _hash_multiset->unique_count;
             for (size_t s = 0; (s < _hash_multiset->slots_count)&&(count > 0); ++s)
             {
-                if (((void**)_hash_multiset->slots)[s] != NULL)
+                if (_hash_multiset->slots[s] != NULL)
                 {
-                    c_unique_chain *select_chain = ((c_unique_chain**)_hash_multiset->slots)[s],
+                    c_unique_chain *select_chain = _hash_multiset->slots[s],
                                    *relocate_chain;
                     while (select_chain != NULL)
                     {
@@ -352,8 +330,8 @@ ptrdiff_t c_hash_multiset_resize(c_hash_multiset *const _hash_multiset,
                         // Хэш цепочки, приведенный к новому количеству слотов.
                         const size_t presented_hash = relocate_chain->hash % _slots_count;
 
-                        relocate_chain->next_chain = ((void**)new_slots)[presented_hash];
-                        ((void**)new_slots)[presented_hash] = relocate_chain;
+                        relocate_chain->next_chain = new_slots[presented_hash];
+                        new_slots[presented_hash] = relocate_chain;
 
                         --count;
                     }
@@ -390,16 +368,12 @@ ptrdiff_t c_hash_multiset_check(const c_hash_multiset *const _hash_multiset,
     // Приведенный хэш.
     const size_t presented_hash = hash % _hash_multiset->slots_count;
 
-    const c_unique_chain *select_chain = ((c_unique_chain**)_hash_multiset->slots)[presented_hash];
+    const c_unique_chain *select_chain = _hash_multiset->slots[presented_hash];
     while (select_chain != NULL)
     {
-        // Неприведенный хэш цепи.
-        const size_t hash_c = select_chain->hash;
-        if (hash == hash_c)
+        if (hash == select_chain->hash)
         {
-            // Данные цепи.
-            const void *const data_c = (uint8_t*)(select_chain->head) + sizeof(void*);
-            if (_hash_multiset->comp_func(_data, data_c) > 0)
+            if (_hash_multiset->comp_func(_data, select_chain->head->data) > 0)
             {
                 return 1;
             }
@@ -427,16 +401,12 @@ size_t c_hash_multiset_count(const c_hash_multiset *const _hash_multiset,
     // Приведенный хэш.
     const size_t presented_hash = hash % _hash_multiset->slots_count;
 
-    const c_unique_chain *select_chain = ((c_unique_chain**)_hash_multiset->slots)[presented_hash];
+    const c_unique_chain *select_chain = _hash_multiset->slots[presented_hash];
     while (select_chain != NULL)
     {
-        // Неприведенный хэш цепи.
-        const size_t hash_c = select_chain->hash;
-        if (hash == hash_c)
+        if (hash == select_chain->hash)
         {
-            // Данные цепи.
-            const void *const data_c = (uint8_t*)(select_chain->head) + sizeof(void*);
-            if (_hash_multiset->comp_func(_data, data_c) > 0)
+            if (_hash_multiset->comp_func(_data, select_chain->head->data) > 0)
             {
                 return select_chain->count;
             }
@@ -463,18 +433,18 @@ ptrdiff_t c_hash_multiset_for_each(const c_hash_multiset *const _hash_multiset,
     size_t count = _hash_multiset->unique_count;
     for (size_t s = 0; (s < _hash_multiset->slots_count)&&(count > 0); ++s)
     {
-        if (((void**)_hash_multiset->slots)[s] != NULL)
+        if (_hash_multiset->slots[s] != NULL)
         {
-            const c_unique_chain *select_chain = ((c_unique_chain**)_hash_multiset->slots)[s];
+            const c_unique_chain *select_chain = _hash_multiset->slots[s];
             while (select_chain != NULL)
             {
-                const void *select_node = select_chain->head;
+                const c_hash_multiset_node *select_node = select_chain->head;
                 while (select_node != NULL)
                 {
-                    _func( (uint8_t*)select_node + sizeof(void*) );
-                    select_node = *((void**)select_node);
+                    _func( select_node->data );
+                    select_node = select_node->next;
                 }
-                select_chain = select_chain ->next_chain;
+                select_chain = select_chain->next_chain;
                 --count;
             }
         }
@@ -499,29 +469,30 @@ ptrdiff_t c_hash_multiset_clear(c_hash_multiset *const _hash_multiset,
     {
         for (size_t s = 0; (s < _hash_multiset->slots_count)&&(count > 0); ++s)
         {
-            if (((void**)_hash_multiset->slots)[s] != NULL)
+            if (_hash_multiset->slots[s] != NULL)
             {
-                c_unique_chain *select_chain = ((c_unique_chain**)_hash_multiset->slots)[s],
+                c_unique_chain *select_chain = _hash_multiset->slots[s],
                                *delete_chain;
+
                 while (select_chain != NULL)
                 {
                     delete_chain = select_chain;
                     select_chain = select_chain->next_chain;
 
-                    void *select_node = delete_chain->head,
-                         *delete_node;
+                    c_hash_multiset_node *select_node = delete_chain->head,
+                                         *delete_node;
                     while (select_node != NULL)
                     {
                         delete_node = select_node;
-                        select_node = *((void**)select_node);
+                        select_node = select_node->next;
 
-                        _del_func( (uint8_t*)delete_node + sizeof(void*) );
+                        _del_func( delete_node->data );
                         free(delete_node);
                     }
                     free(delete_chain);
                 }
 
-                ((void**)_hash_multiset->slots)[s] = NULL;
+                _hash_multiset->slots[s] = NULL;
             }
         }
     } else {
@@ -529,28 +500,28 @@ ptrdiff_t c_hash_multiset_clear(c_hash_multiset *const _hash_multiset,
         // задана ли функция удаления данных.
         for (size_t s = 0; (s < _hash_multiset->slots_count)&&(count > 0); ++s)
         {
-            if (((void**)_hash_multiset->slots)[s] != NULL)
+            if (_hash_multiset->slots[s] != NULL)
             {
-                c_unique_chain *select_chain = ((c_unique_chain**)_hash_multiset->slots)[s],
+                c_unique_chain *select_chain = _hash_multiset->slots[s],
                                *delete_chain;
                 while (select_chain != NULL)
                 {
                     delete_chain = select_chain;
                     select_chain = select_chain->next_chain;
 
-                    void *select_node = delete_chain->head,
-                         *delete_node;
+                    c_hash_multiset_node *select_node = delete_chain->head,
+                                         *delete_node;
                     while (select_node != NULL)
                     {
                         delete_node = select_node;
-                        select_node = *((void**)select_node);
+                        select_node = select_node->next;
 
                         free(delete_node);
                     }
                     free(delete_chain);
                 }
 
-                ((void**)_hash_multiset->slots)[s] = NULL;
+                _hash_multiset->slots[s] = NULL;
             }
         }
     }
@@ -576,33 +547,29 @@ ptrdiff_t c_hash_multiset_erase_all(c_hash_multiset *const _hash_multiset,
     // Приведенный хэш заданных данных.
     const size_t presented_hash = hash % _hash_multiset->slots_count;
 
-    if (((void**)_hash_multiset->slots)[presented_hash] != NULL)
+    if (_hash_multiset->slots[presented_hash] != NULL)
     {
-        c_unique_chain *select_chain = ((c_unique_chain**)_hash_multiset->slots)[presented_hash],
-                       *prev_chain = (c_unique_chain*)&((c_unique_chain**)_hash_multiset->slots)[presented_hash];
+        c_unique_chain *select_chain = _hash_multiset->slots[presented_hash],
+                       *prev_chain = NULL;
 
         while (select_chain != NULL)
         {
-            // Неприведенный хэш цепи.
-            const size_t hash_c = select_chain->hash;
-            if (hash == hash_c)
+            if (hash == select_chain->hash)
             {
-                // Данные цепи.
-                const void *const data_c = (uint8_t*)(select_chain->head) + sizeof(void*);
-                if (_hash_multiset->comp_func(_data, data_c) > 0)
+                if (_hash_multiset->comp_func(_data, select_chain->head->data) > 0)
                 {
                     // Удаляем заданную цепь из хэш-мультимножества.
-                    void *select_node = select_chain->head,
-                         *delete_node;
+                    c_hash_multiset_node *select_node = select_chain->head,
+                                         *delete_node;
                     // Сперва удаляем все узлы цепи.
                     if (_del_func != NULL)
                     {
                         while (select_node != NULL)
                         {
                             delete_node = select_node;
-                            select_node = *((void**)select_node);
+                            select_node = select_node->next;
 
-                            _del_func( (uint8_t*)delete_node + sizeof(void*) );
+                            _del_func( delete_node->data );
                             free(delete_node);
                         }
                     } else {
@@ -611,7 +578,7 @@ ptrdiff_t c_hash_multiset_erase_all(c_hash_multiset *const _hash_multiset,
                         while (select_node != NULL)
                         {
                             delete_node = select_node;
-                            select_node = *((void**)select_node);
+                            select_node = select_node->next;
 
                             free(delete_node);
                         }
@@ -623,7 +590,12 @@ ptrdiff_t c_hash_multiset_erase_all(c_hash_multiset *const _hash_multiset,
                     _hash_multiset->nodes_count -= select_chain->count;
 
                     // Ампутация.
-                    prev_chain->next_chain = select_chain->next_chain;
+                    if (prev_chain != NULL)
+                    {
+                        prev_chain->next_chain = select_chain->next_chain;
+                    } else {
+                        _hash_multiset->slots[presented_hash] = select_chain->next_chain;
+                    }
 
                     free(select_chain);
 

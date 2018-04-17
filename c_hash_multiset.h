@@ -26,23 +26,18 @@
 // расширении.
 #define EXTENSION_FROM_ZERO ( (size_t) 1024 )
 
-/*
- * Слот - это односвязный список, который содержит односвязные списки
- * одинаковых элементов (уникальные цепи).
- *
- * Узел, содержащий данные:
- * Что за данные:                   |___next___|_________data_________|
- * Представление:                   |___void*__|__uint8_t[data_size]__|
- *
- * Указатель на узел указывает сюда ^
- */
+typedef struct s_c_hash_multiset_node
+{
+    struct s_c_hash_multiset_node *next;
+    void *data;
+} c_hash_multiset_node;
 
 typedef struct s_c_unique_chain
 {
-    void *next_chain;
-    void *head;
-    size_t count;
-    size_t hash;
+    struct s_c_unique_chain *next_chain;
+    c_hash_multiset_node *head;
+    size_t count,
+           hash;
 } c_unique_chain;
 
 typedef struct s_c_hash_multiset
@@ -54,20 +49,18 @@ typedef struct s_c_hash_multiset
     size_t (*comp_func)(const void *const _a,
                         const void *const _b);
 
-    size_t data_size;
     size_t slots_count;
     size_t nodes_count;
     size_t unique_count;
 
     float max_load_factor;
 
-    void *slots;
+    c_unique_chain **slots;
 } c_hash_multiset;
 
 c_hash_multiset *c_hash_multiset_create(size_t (*const _hash_func)(const void *const _data),
                                         size_t (*const _comp_func)(const void *const _a,
                                                                    const void *const _b),
-                                        const size_t _data_size,
                                         const size_t _slots_count,
                                         const float _max_load_factor);
 
