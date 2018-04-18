@@ -223,7 +223,7 @@ ptrdiff_t c_hash_multiset_erase(c_hash_multiset *const _hash_multiset,
     if (_hash_multiset == NULL) return -1;
     if (_data == NULL) return -2;
 
-    if (_hash_multiset->nodes_count == 0) return 0;
+    if (_hash_multiset->unique_count == 0) return 0;
 
     // Неприведенный хэш искомых данных.
     const size_t hash = _hash_multiset->hash_func(_data);
@@ -330,6 +330,7 @@ ptrdiff_t c_hash_multiset_resize(c_hash_multiset *const _hash_multiset,
                         // Хэш цепочки, приведенный к новому количеству слотов.
                         const size_t presented_hash = relocate_chain->hash % _slots_count;
 
+                        // Перенос цепочки.
                         relocate_chain->next_chain = new_slots[presented_hash];
                         new_slots[presented_hash] = relocate_chain;
 
@@ -360,7 +361,7 @@ ptrdiff_t c_hash_multiset_check(const c_hash_multiset *const _hash_multiset,
     if (_hash_multiset == NULL) return -1;
     if (_data == NULL) return -2;
 
-    if (_hash_multiset->nodes_count == 0) return 0;
+    if (_hash_multiset->unique_count == 0) return 0;
 
     // Неприведенный хэш данных.
     const size_t hash = _hash_multiset->hash_func(_data);
@@ -393,7 +394,7 @@ size_t c_hash_multiset_count(const c_hash_multiset *const _hash_multiset,
     if (_hash_multiset == NULL) return 0;
     if (_data == NULL) return 0;
 
-    if (_hash_multiset->nodes_count == 0) return 0;
+    if (_hash_multiset->unique_count == 0) return 0;
 
     // Неприведенный хэш искомых данных.
     const size_t hash = _hash_multiset->hash_func(_data);
@@ -428,7 +429,7 @@ ptrdiff_t c_hash_multiset_for_each(const c_hash_multiset *const _hash_multiset,
     if (_hash_multiset == NULL) return -1;
     if (_func == NULL) return -2;
 
-    if (_hash_multiset->nodes_count == 0) return 0;
+    if (_hash_multiset->unique_count == 0) return 0;
 
     size_t count = _hash_multiset->unique_count;
     for (size_t s = 0; (s < _hash_multiset->slots_count)&&(count > 0); ++s)
@@ -445,7 +446,7 @@ ptrdiff_t c_hash_multiset_for_each(const c_hash_multiset *const _hash_multiset,
                     select_node = select_node->next;
                 }
                 select_chain = select_chain->next_chain;
-                --count;
+                --count; 
             }
         }
     }
@@ -462,9 +463,9 @@ ptrdiff_t c_hash_multiset_clear(c_hash_multiset *const _hash_multiset,
 {
     if (_hash_multiset == NULL) return -1;
 
-    if (_hash_multiset->nodes_count == 0) return 0;
+    if (_hash_multiset->unique_count == 0) return 0;
 
-    size_t count = _hash_multiset->slots_count;
+    size_t count = _hash_multiset->unique_count;
     if (_del_func != NULL)
     {
         for (size_t s = 0; (s < _hash_multiset->slots_count)&&(count > 0); ++s)
@@ -490,8 +491,8 @@ ptrdiff_t c_hash_multiset_clear(c_hash_multiset *const _hash_multiset,
                         free(delete_node);
                     }
                     free(delete_chain);
+                    --count;
                 }
-
                 _hash_multiset->slots[s] = NULL;
             }
         }
@@ -519,8 +520,8 @@ ptrdiff_t c_hash_multiset_clear(c_hash_multiset *const _hash_multiset,
                         free(delete_node);
                     }
                     free(delete_chain);
+                    --count;
                 }
-
                 _hash_multiset->slots[s] = NULL;
             }
         }
@@ -539,7 +540,7 @@ ptrdiff_t c_hash_multiset_erase_all(c_hash_multiset *const _hash_multiset,
     if (_hash_multiset == NULL) return -1;
     if (_data == NULL) return -2;
 
-    if (_hash_multiset->nodes_count == 0) return 0;
+    if (_hash_multiset->unique_count == 0) return 0;
 
     // Неприведенный хэш заданных данных.
     const size_t hash = _hash_multiset->hash_func(_data);
