@@ -27,18 +27,18 @@ c_hash_multiset *c_hash_multiset_create(size_t (*const _hash_func)(const void *c
     if (_comp_func == NULL) return NULL;
     if (_max_load_factor <= 0.0f) return NULL;
 
-    c_unique_chain **new_slots = NULL;
+    c_hash_multiset_chain **new_slots = NULL;
 
     if (_slots_count > 0)
     {
-        const size_t new_slots_size = _slots_count * sizeof(c_unique_chain*);
+        const size_t new_slots_size = _slots_count * sizeof(c_hash_multiset_chain*);
         if ( (new_slots_size == 0) ||
-             (new_slots_size / _slots_count != sizeof(c_unique_chain*)) )
+             (new_slots_size / _slots_count != sizeof(c_hash_multiset_chain*)) )
         {
             return NULL;
         }
 
-        new_slots = (c_unique_chain**)malloc(new_slots_size);
+        new_slots = (c_hash_multiset_chain**)malloc(new_slots_size);
         if (new_slots == NULL)
         {
             return NULL;
@@ -140,7 +140,7 @@ ptrdiff_t c_hash_multiset_insert(c_hash_multiset *const _hash_multiset,
     const size_t presented_hash = hash % _hash_multiset->slots_count;
 
     // Попытаемся найти в нужном слоте уникальную цепочку с требуемыми данными.
-    c_unique_chain *select_chain = _hash_multiset->slots[presented_hash];
+    c_hash_multiset_chain *select_chain = _hash_multiset->slots[presented_hash];
 
     while(select_chain != NULL)
     {
@@ -160,7 +160,7 @@ ptrdiff_t c_hash_multiset_insert(c_hash_multiset *const _hash_multiset,
     {
         created = 1;
         // Попытаемся создать цепочку.
-        c_unique_chain *const new_chain = (c_unique_chain*)malloc(sizeof(c_unique_chain));
+        c_hash_multiset_chain *const new_chain = (c_hash_multiset_chain*)malloc(sizeof(c_hash_multiset_chain));
         if (new_chain == NULL)
         {
             return -7;
@@ -232,7 +232,7 @@ ptrdiff_t c_hash_multiset_erase(c_hash_multiset *const _hash_multiset,
     const size_t presented_hash = hash % _hash_multiset->slots_count;
 
     // Поиск цепи с заданными данными.
-    c_unique_chain *select_chain = _hash_multiset->slots[presented_hash];
+    c_hash_multiset_chain *select_chain = _hash_multiset->slots[presented_hash];
     while (select_chain != NULL)
     {
         if (hash == select_chain->hash)
@@ -297,14 +297,14 @@ ptrdiff_t c_hash_multiset_resize(c_hash_multiset *const _hash_multiset,
 
         return 1;
     } else {
-        const size_t new_slots_size = _slots_count * sizeof(c_unique_chain*);
+        const size_t new_slots_size = _slots_count * sizeof(c_hash_multiset_chain*);
         if ( (new_slots_size == 0) ||
-             (new_slots_size / _slots_count != sizeof(c_unique_chain*)) )
+             (new_slots_size / _slots_count != sizeof(c_hash_multiset_chain*)) )
         {
             return -3;
         }
 
-        c_unique_chain **const new_slots = (c_unique_chain*)malloc(new_slots_size);
+        c_hash_multiset_chain **const new_slots = (c_hash_multiset_chain**)malloc(new_slots_size);
         if (new_slots == NULL)
         {
             return -4;
@@ -320,8 +320,8 @@ ptrdiff_t c_hash_multiset_resize(c_hash_multiset *const _hash_multiset,
             {
                 if (_hash_multiset->slots[s] != NULL)
                 {
-                    c_unique_chain *select_chain = _hash_multiset->slots[s],
-                                   *relocate_chain;
+                    c_hash_multiset_chain *select_chain = _hash_multiset->slots[s],
+                                          *relocate_chain;
                     while (select_chain != NULL)
                     {
                         relocate_chain = select_chain;
@@ -368,7 +368,7 @@ ptrdiff_t c_hash_multiset_check(const c_hash_multiset *const _hash_multiset,
     // Приведенный хэш.
     const size_t presented_hash = hash % _hash_multiset->slots_count;
 
-    const c_unique_chain *select_chain = _hash_multiset->slots[presented_hash];
+    const c_hash_multiset_chain *select_chain = _hash_multiset->slots[presented_hash];
     while (select_chain != NULL)
     {
         if (hash == select_chain->hash)
@@ -401,7 +401,7 @@ size_t c_hash_multiset_count(const c_hash_multiset *const _hash_multiset,
     // Приведенный хэш.
     const size_t presented_hash = hash % _hash_multiset->slots_count;
 
-    const c_unique_chain *select_chain = _hash_multiset->slots[presented_hash];
+    const c_hash_multiset_chain *select_chain = _hash_multiset->slots[presented_hash];
     while (select_chain != NULL)
     {
         if (hash == select_chain->hash)
@@ -435,7 +435,7 @@ ptrdiff_t c_hash_multiset_for_each(const c_hash_multiset *const _hash_multiset,
     {
         if (_hash_multiset->slots[s] != NULL)
         {
-            const c_unique_chain *select_chain = _hash_multiset->slots[s];
+            const c_hash_multiset_chain *select_chain = _hash_multiset->slots[s];
             while (select_chain != NULL)
             {
                 const c_hash_multiset_node *select_node = select_chain->head;
@@ -471,8 +471,8 @@ ptrdiff_t c_hash_multiset_clear(c_hash_multiset *const _hash_multiset,
         {
             if (_hash_multiset->slots[s] != NULL)
             {
-                c_unique_chain *select_chain = _hash_multiset->slots[s],
-                               *delete_chain;
+                c_hash_multiset_chain *select_chain = _hash_multiset->slots[s],
+                                      *delete_chain;
 
                 while (select_chain != NULL)
                 {
@@ -502,8 +502,8 @@ ptrdiff_t c_hash_multiset_clear(c_hash_multiset *const _hash_multiset,
         {
             if (_hash_multiset->slots[s] != NULL)
             {
-                c_unique_chain *select_chain = _hash_multiset->slots[s],
-                               *delete_chain;
+                c_hash_multiset_chain *select_chain = _hash_multiset->slots[s],
+                                      *delete_chain;
                 while (select_chain != NULL)
                 {
                     delete_chain = select_chain;
@@ -549,8 +549,8 @@ ptrdiff_t c_hash_multiset_erase_all(c_hash_multiset *const _hash_multiset,
 
     if (_hash_multiset->slots[presented_hash] != NULL)
     {
-        c_unique_chain *select_chain = _hash_multiset->slots[presented_hash],
-                       *prev_chain = NULL;
+        c_hash_multiset_chain *select_chain = _hash_multiset->slots[presented_hash],
+                              *prev_chain = NULL;
 
         while (select_chain != NULL)
         {

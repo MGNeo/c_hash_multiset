@@ -32,13 +32,13 @@ typedef struct s_c_hash_multiset_node
     void *data;
 } c_hash_multiset_node;
 
-typedef struct s_c_unique_chain
+typedef struct s_c_hash_multiset_chain
 {
-    struct s_c_unique_chain *next_chain;
+    struct s_c_hash_multiset_chain *next_chain;
     c_hash_multiset_node *head;
     size_t count,
            hash;
-} c_unique_chain;
+} c_hash_multiset_chain;
 
 typedef struct s_c_hash_multiset
 {
@@ -55,7 +55,7 @@ typedef struct s_c_hash_multiset
 
     float max_load_factor;
 
-    c_unique_chain **slots;
+    c_hash_multiset_chain **slots;
 } c_hash_multiset;
 
 c_hash_multiset *c_hash_multiset_create(size_t (*const _hash_func)(const void *const _data),
