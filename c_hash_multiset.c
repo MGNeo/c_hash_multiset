@@ -99,11 +99,8 @@ ptrdiff_t c_hash_multiset_insert(c_hash_multiset *const _hash_multiset,
     // Если слотов нет вообще.
     if (_hash_multiset->slots_count == 0)
     {
-        // Задаем новое количество слотов с некоторым запасом.
-        const size_t new_slots_count = C_HASH_MULTISET_0;
-
         // Пытаемся расширить слоты.
-        if (c_hash_multiset_resize(_hash_multiset, new_slots_count) <= 0)
+        if (c_hash_multiset_resize(_hash_multiset, C_HASH_MULTISET_0) <= 0)
         {
             return -4;
         }
