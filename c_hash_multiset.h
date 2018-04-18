@@ -15,7 +15,6 @@
 #ifndef C_HASH_MULTISET_H
 #define C_HASH_MULTISET_H
 
-/*отладочное*/#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
