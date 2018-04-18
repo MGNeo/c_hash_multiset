@@ -101,11 +101,12 @@ ptrdiff_t c_hash_multiset_insert(c_hash_multiset *const _hash_multiset,
     {
         // Задаем новое количество слотов с некоторым запасом.
         const size_t new_slots_count = EXTENSION_FROM_ZERO;
+        if (new_slots_count == 0) return -3;
 
         // Пытаемся расширить слоты.
         if (c_hash_multiset_resize(_hash_multiset, new_slots_count) < 0)
         {
-            return -3;
+            return -4;
         }
     } else {
         // Если слоты есть, то при достижении предела загруженности увеличиваем количество слотов.
@@ -116,18 +117,18 @@ ptrdiff_t c_hash_multiset_insert(c_hash_multiset *const _hash_multiset,
             size_t new_slots_count = _hash_multiset->slots_count * 1.75f;
             if (new_slots_count < _hash_multiset->slots_count)
             {
-                return -4;
+                return -5;
             }
             new_slots_count += 1;
             if (new_slots_count == 0)
             {
-                return -5;
+                return -6;
             }
 
             // Пытаемся расширить слоты.
             if (c_hash_multiset_resize(_hash_multiset, new_slots_count) < 0)
             {
-                return -6;
+                return -7;
             }
         }
     }
@@ -163,7 +164,7 @@ ptrdiff_t c_hash_multiset_insert(c_hash_multiset *const _hash_multiset,
         c_hash_multiset_chain *const new_chain = (c_hash_multiset_chain*)malloc(sizeof(c_hash_multiset_chain));
         if (new_chain == NULL)
         {
-            return -7;
+            return -8;
         }
 
         // Встроим цепочку в слот.
