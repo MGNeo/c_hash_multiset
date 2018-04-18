@@ -285,7 +285,7 @@ ptrdiff_t c_hash_multiset_resize(c_hash_multiset *const _hash_multiset,
 
     if (_slots_count == 0)
     {
-        if (_hash_multiset->nodes_count != 0)
+        if (_hash_multiset->unique_count != 0)
         {
             return -2;
         }
