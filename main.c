@@ -6,8 +6,8 @@
 
 // Проверка возвращаемых значений не выполняется для упрощения.
 
-// Функция генерации хэша по строке.
-size_t hash_s(const void *const _data)
+// Функция генерации хэша по данным-строке.
+size_t hash_data_s(const void *const _data)
 {
     if (_data == NULL)return 0;
     const char *c = (char*)_data;
@@ -19,19 +19,19 @@ size_t hash_s(const void *const _data)
     return hash;
 }
 
-// Функция детального сравнения строк.
-size_t comp_s(const void *const _a,
-              const void *const _b)
+// Функция детального сравнения данных-строк.
+size_t comp_data_s(const void *const _key_a,
+                   const void *const _key_b)
 {
-    if ( (_a == NULL) || (_b == NULL) )
+    if ( (_key_a == NULL) || (_key_b == NULL) )
     {
         return 0;
     }
 
-    const char *const a = (char*)_a;
-    const char *const b = (char*)_b;
+    const char *const key_a = (char*)_key_a;
+    const char *const key_b = (char*)_key_b;
 
-    if (strcmp(a, b) == 0)
+    if (strcmp(key_a, key_b) == 0)
     {
         return 1;
     }
@@ -39,8 +39,8 @@ size_t comp_s(const void *const _a,
     return 0;
 }
 
-// Функция вывода строки.
-void print_s(const void *const _data)
+// Функция вывода данных-строки.
+void print_data_s(const void *const _data)
 {
     if (_data == NULL) return;
     const char *const data = (char*)_data;
@@ -51,8 +51,8 @@ void print_s(const void *const _data)
 int main(int argc, char **argv)
 {
     // Создание хэш-мультимножества.
-    c_hash_multiset *hash_multiset = c_hash_multiset_create(hash_s,
-                                                            comp_s,
+    c_hash_multiset *hash_multiset = c_hash_multiset_create(hash_data_s,
+                                                            comp_data_s,
                                                             11,
                                                             0.5f);
 
@@ -70,21 +70,21 @@ int main(int argc, char **argv)
     c_hash_multiset_insert(hash_multiset, string_c);
 
     // Вывод содержимого хэш-мультимножества.
-    c_hash_multiset_for_each(hash_multiset, print_s);
+    c_hash_multiset_for_each(hash_multiset, print_data_s);
     printf("\n");
 
     // Удаление одного (уникального всвоем роде) элемента.
     c_hash_multiset_erase(hash_multiset, string_a, NULL);
 
     // Вывод содержимого хэш-мультимножества.
-    c_hash_multiset_for_each(hash_multiset, print_s);
+    c_hash_multiset_for_each(hash_multiset, print_data_s);
     printf("\n");
 
     // Удаление всех копий заданного элемента.
     c_hash_multiset_erase_all(hash_multiset, string_c, NULL);
 
     // Вывод содержимого хэш-мультимножества.
-    c_hash_multiset_for_each(hash_multiset, print_s);
+    c_hash_multiset_for_each(hash_multiset, print_data_s);
     printf("\n");
 
     // Проверка наличия и количества элементов в хэш-мультимножестве.
@@ -93,21 +93,21 @@ int main(int argc, char **argv)
 
     have = c_hash_multiset_check(hash_multiset, string_a);
     count = c_hash_multiset_count(hash_multiset, string_a);
-    printf("string_a have/count: %Iu/%Iu\n", have, count);
+    printf("string_a[Good] have/count: %Iu/%Iu\n", have, count);
 
     have = c_hash_multiset_check(hash_multiset, string_b);
     count = c_hash_multiset_count(hash_multiset, string_b);
-    printf("string_b have/count: %Iu/%Iu\n", have, count);
+    printf("string_b[Wall] have/count: %Iu/%Iu\n", have, count);
 
     have = c_hash_multiset_check(hash_multiset, string_c);
     count = c_hash_multiset_count(hash_multiset, string_c);
-    printf("string_c have/count: %Iu/%Iu\n", have, count);
+    printf("string_c[Area] have/count: %Iu/%Iu\n", have, count);
 
 
     // Удаление хэш-мультимножества.
     c_hash_multiset_delete(hash_multiset, NULL);
 
     getchar();
-    
+
     return 0;
 }

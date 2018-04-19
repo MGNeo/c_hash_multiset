@@ -27,7 +27,7 @@
 
 typedef struct s_c_hash_multiset_node
 {
-    struct s_c_hash_multiset_node *next;
+    struct s_c_hash_multiset_node *next_node;
     void *data;
 } c_hash_multiset_node;
 
@@ -42,11 +42,11 @@ typedef struct s_c_hash_multiset_chain
 typedef struct s_c_hash_multiset
 {
     // Функция, генерирующая хэш на основе данных.
-    size_t (*hash_func)(const void *const _data);
+    size_t (*hash_data)(const void *const _data);
     // Функция детального сравнения данных.
     // В случае идентичности данных должна возвращать > 0, иначе 0.
-    size_t (*comp_func)(const void *const _a,
-                        const void *const _b);
+    size_t (*comp_data)(const void *const _data_a,
+                        const void *const _data_b);
 
     size_t slots_count,
            nodes_count,
@@ -57,21 +57,21 @@ typedef struct s_c_hash_multiset
     c_hash_multiset_chain **slots;
 } c_hash_multiset;
 
-c_hash_multiset *c_hash_multiset_create(size_t (*const _hash_func)(const void *const _data),
-                                        size_t (*const _comp_func)(const void *const _a,
-                                                                   const void *const _b),
+c_hash_multiset *c_hash_multiset_create(size_t (*const _hash_data)(const void *const _data),
+                                        size_t (*const _comp_data)(const void *const _data_a,
+                                                                   const void *const _data_b),
                                         const size_t _slots_count,
                                         const float _max_load_factor);
 
 ptrdiff_t c_hash_multiset_delete(c_hash_multiset *const _hash_multiset,
-                                 void (*const _del_func)(void *const _data));
+                                 void (*const _del_data)(void *const _data));
 
 ptrdiff_t c_hash_multiset_insert(c_hash_multiset *const _hash_multiset,
                                  const void *const _data);
 
 ptrdiff_t c_hash_multiset_erase(c_hash_multiset *const _hash_multiset,
                                 const void *const _data,
-                                void (*const _del_func)(void *const _data));
+                                void (*const _del_data)(void *const _data));
 
 ptrdiff_t c_hash_multiset_resize(c_hash_multiset *const _hash_multiset,
                                  const size_t _slots_count);
@@ -83,13 +83,13 @@ size_t c_hash_multiset_count(const c_hash_multiset *const _hash_multiset,
                              const void *const _data);
 
 ptrdiff_t c_hash_multiset_for_each(const c_hash_multiset *const _hash_multiset,
-                                   void (*const _func)(const void *const _data));
+                                   void (*const _action_data)(const void *const _data));
 
 ptrdiff_t c_hash_multiset_clear(c_hash_multiset *const _hash_multiset,
-                                void (*const _del_func)(void *const _data));
+                                void (*const _del_data)(void *const _data));
 
 ptrdiff_t c_hash_multiset_erase_all(c_hash_multiset *const _hash_multiset,
                                     const void *const _data,
-                                    void (*const _del_func)(void *const _data));
+                                    void (*const _del_data)(void *const _data));
 
 #endif
