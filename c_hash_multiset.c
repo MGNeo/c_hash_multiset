@@ -229,7 +229,8 @@ ptrdiff_t c_hash_multiset_erase(c_hash_multiset *const _hash_multiset,
     const size_t presented_hash = hash % _hash_multiset->slots_count;
 
     // Поиск цепи с заданными данными.
-    c_hash_multiset_chain *select_chain = _hash_multiset->slots[presented_hash];
+    c_hash_multiset_chain *select_chain = _hash_multiset->slots[presented_hash],
+                          *prev_chain = NULL;
     while (select_chain != NULL)
     {
         if (hash == select_chain->hash)
@@ -249,17 +250,23 @@ ptrdiff_t c_hash_multiset_erase(c_hash_multiset *const _hash_multiset,
                 --select_chain->count;
                 --_hash_multiset->nodes_count;
 
-                // Если цепочка опустела, удаляем ее.
+                // Если цепочка опустела, удаляем ее, сшивая разрыв.
                 if (select_chain->count == 0)
                 {
+                    if (prev_chain != NULL)
+                    {
+                        prev_chain->next_chain = select_chain->next_chain;
+                    } else {
+                        _hash_multiset->slots[presented_hash] = select_chain->next_chain;
+                    }
                     free(select_chain);
-                    _hash_multiset->slots[presented_hash] = NULL;
+
                     --_hash_multiset->unique_count;
                 }
                 return 1;
             }
         }
-
+        prev_chain = select_chain;
         select_chain = select_chain->next_chain;
     }
 
@@ -587,7 +594,7 @@ ptrdiff_t c_hash_multiset_erase_all(c_hash_multiset *const _hash_multiset,
                     // Элементов в хэш-мультимножестве стало меньше на количество элементов удаляемой цепи.
                     _hash_multiset->nodes_count -= select_chain->count;
 
-                    // Ампутация.
+                    // Ампутация цепи.
                     if (prev_chain != NULL)
                     {
                         prev_chain->next_chain = select_chain->next_chain;
