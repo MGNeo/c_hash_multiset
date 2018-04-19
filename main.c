@@ -103,7 +103,6 @@ int main(int argc, char **argv)
     count = c_hash_multiset_count(hash_multiset, string_c);
     printf("string_c[Area] have/count: %Iu/%Iu\n", have, count);
 
-
     // Удаление хэш-мультимножества.
     c_hash_multiset_delete(hash_multiset, NULL);
 
