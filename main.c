@@ -93,15 +93,15 @@ int main(int argc, char **argv)
 
     have = c_hash_multiset_check(hash_multiset, string_a);
     count = c_hash_multiset_count(hash_multiset, string_a);
-    printf("string_a[Good] have/count: %Iu/%Iu\n", have, count);
+    printf("string_a[Good] have/count: %Id/%Iu\n", have, count);
 
     have = c_hash_multiset_check(hash_multiset, string_b);
     count = c_hash_multiset_count(hash_multiset, string_b);
-    printf("string_b[Wall] have/count: %Iu/%Iu\n", have, count);
+    printf("string_b[Wall] have/count: %Id/%Iu\n", have, count);
 
     have = c_hash_multiset_check(hash_multiset, string_c);
     count = c_hash_multiset_count(hash_multiset, string_c);
-    printf("string_c[Area] have/count: %Iu/%Iu\n", have, count);
+    printf("string_c[Area] have/count: %Id/%Iu\n", have, count);
 
     // Удаление хэш-мультимножества.
     c_hash_multiset_delete(hash_multiset, NULL);
