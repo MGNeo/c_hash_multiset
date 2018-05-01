@@ -73,7 +73,7 @@ int main(int argc, char **argv)
     c_hash_multiset_for_each(hash_multiset, print_data_s);
     printf("\n");
 
-    // Удаление одного (уникального всвоем роде) элемента.
+    // Удаление одного (уникального в своем роде) элемента.
     c_hash_multiset_erase(hash_multiset, string_a, NULL);
 
     // Вывод содержимого хэш-мультимножества.
