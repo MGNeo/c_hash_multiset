@@ -110,7 +110,7 @@ ptrdiff_t c_hash_multiset_insert(c_hash_multiset *const _hash_multiset,
         if (load_factor >= _hash_multiset->max_load_factor)
         {
             // Определим новое количество слотов.
-            size_t new_slots_count = _hash_multiset->slots_count * 1.75f;
+            size_t new_slots_count = (size_t)(_hash_multiset->slots_count * 1.75f);
             if (new_slots_count < _hash_multiset->slots_count)
             {
                 return -5;
