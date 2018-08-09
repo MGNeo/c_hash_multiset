@@ -15,10 +15,6 @@
 #ifndef C_HASH_MULTISET_H
 #define C_HASH_MULTISET_H
 
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include <memory.h>
 #include <stddef.h>
 
 // Количество слотов, задаваемое хэш-мультимножеству с нулем слотов при автоматическом

@@ -12,6 +12,11 @@
     Лицензия: GPLv3
 */
 
+#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
+#include <memory.h>
+
 #include "c_hash_multiset.h"
 
 // Создает новое хэш-мультимножество.
