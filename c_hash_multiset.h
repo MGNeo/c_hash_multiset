@@ -17,41 +17,7 @@
 
 #include <stddef.h>
 
-// Количество слотов, задаваемое хэш-мультимножеству с нулем слотов при автоматическом
-// расширении.
-#define C_HASH_MULTISET_0 ( (size_t) 1024 )
-
-typedef struct s_c_hash_multiset_node
-{
-    struct s_c_hash_multiset_node *next_node;
-    void *data;
-} c_hash_multiset_node;
-
-typedef struct s_c_hash_multiset_chain
-{
-    struct s_c_hash_multiset_chain *next_chain;
-    c_hash_multiset_node *head;
-    size_t count,
-           hash;
-} c_hash_multiset_chain;
-
-typedef struct s_c_hash_multiset
-{
-    // Функция, генерирующая хэш на основе данных.
-    size_t (*hash_data)(const void *const _data);
-    // Функция детального сравнения данных.
-    // В случае идентичности данных должна возвращать > 0, иначе 0.
-    size_t (*comp_data)(const void *const _data_a,
-                        const void *const _data_b);
-
-    size_t slots_count,
-           nodes_count,
-           unique_count;
-
-    float max_load_factor;
-
-    c_hash_multiset_chain **slots;
-} c_hash_multiset;
+typedef struct s_c_hash_multiset c_hash_multiset;
 
 c_hash_multiset *c_hash_multiset_create(size_t (*const _hash_data)(const void *const _data),
                                         size_t (*const _comp_data)(const void *const _data_a,

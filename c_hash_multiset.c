@@ -19,6 +19,46 @@
 
 #include "c_hash_multiset.h"
 
+// Количество слотов, задаваемое хэш-мультимножеству с нулем слотов при автоматическом
+// расширении.
+#define C_HASH_MULTISET_0 ( (size_t) 1024 )
+
+typedef struct s_c_hash_multiset_node c_hash_multiset_node;
+
+typedef struct s_c_hash_multiset_chain c_hash_multiset_chain;
+
+struct s_c_hash_multiset_node
+{
+    struct s_c_hash_multiset_node *next_node;
+    void *data;
+};
+
+struct s_c_hash_multiset_chain
+{
+    struct s_c_hash_multiset_chain *next_chain;
+    c_hash_multiset_node *head;
+    size_t count,
+           hash;
+};
+
+struct s_c_hash_multiset
+{
+    // Функция, генерирующая хэш на основе данных.
+    size_t (*hash_data)(const void *const _data);
+    // Функция детального сравнения данных.
+    // В случае идентичности данных должна возвращать > 0, иначе 0.
+    size_t (*comp_data)(const void *const _data_a,
+                        const void *const _data_b);
+
+    size_t slots_count,
+           nodes_count,
+           unique_count;
+
+    float max_load_factor;
+
+    c_hash_multiset_chain **slots;
+};
+
 // Создает новое хэш-мультимножество.
 // Позволяет создавать хэш-мультимножество с нулем слотов.
 // В случае успеха возвращает указатель на созданное хэш-мультимножество, иначе NULL.
