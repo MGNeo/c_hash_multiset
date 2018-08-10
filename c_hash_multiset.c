@@ -141,7 +141,7 @@ ptrdiff_t c_hash_multiset_delete(c_hash_multiset *const _hash_multiset,
 }
 
 // Вставка данных в хэш-мультимножество.
-// В случае успешной вставки возвращает > 0, а данные захватываются хэш-мультимножеством.
+// В случае успешной вставки возвращает > 0, данные захватываются хэш-мультимножеством.
 // В случае ошибки возвращает < 0, данные не захватываются хэш-мультимножеством.
 ptrdiff_t c_hash_multiset_insert(c_hash_multiset *const _hash_multiset,
                                  const void *const _data)
@@ -157,7 +157,7 @@ ptrdiff_t c_hash_multiset_insert(c_hash_multiset *const _hash_multiset,
         // Пытаемся расширить слоты.
         if (c_hash_multiset_resize(_hash_multiset, C_HASH_MULTISET_0) <= 0)
         {
-            return -4;
+            return -3;
         }
     } else {
         // Если слоты есть, то при достижении предела загруженности увеличиваем количество слотов.
@@ -168,18 +168,18 @@ ptrdiff_t c_hash_multiset_insert(c_hash_multiset *const _hash_multiset,
             size_t new_slots_count = (size_t)(_hash_multiset->slots_count * 1.75f);
             if (new_slots_count < _hash_multiset->slots_count)
             {
-                return -5;
+                return -4;
             }
             new_slots_count += 1;
             if (new_slots_count == 0)
             {
-                return -6;
+                return -5;
             }
 
             // Пытаемся расширить слоты.
             if (c_hash_multiset_resize(_hash_multiset, new_slots_count) < 0)
             {
-                return -7;
+                return -6;
             }
         }
     }
@@ -215,7 +215,7 @@ ptrdiff_t c_hash_multiset_insert(c_hash_multiset *const _hash_multiset,
         c_hash_multiset_chain *const new_chain = (c_hash_multiset_chain*)malloc(sizeof(c_hash_multiset_chain));
         if (new_chain == NULL)
         {
-            return -8;
+            return -7;
         }
 
         // Встроим цепочку в слот.
@@ -247,7 +247,7 @@ ptrdiff_t c_hash_multiset_insert(c_hash_multiset *const _hash_multiset,
             free(select_chain);
             --_hash_multiset->uniques_count;
         }
-        return -9;
+        return -8;
     }
 
     // Свяжем узел с данными.
