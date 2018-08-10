@@ -101,7 +101,12 @@ int main(int argc, char **argv)
 
     have = c_hash_multiset_check(hash_multiset, string_c);
     count = c_hash_multiset_count(hash_multiset, string_c);
-    printf("string_c[Area] have/count: %Id/%Iu\n", have, count);
+    printf("string_c[Area] have/count: %Id/%Iu\n\n", have, count);
+
+    // Покажем общую информацию.
+    printf("slots count: %Iu\n", c_hash_multiset_slots_count(hash_multiset));
+    printf("nodes count: %Iu\n", c_hash_multiset_nodes_count(hash_multiset));
+    printf("uniques count: %Iu\n", c_hash_multiset_uniques_count(hash_multiset));
 
     // Удаление хэш-мультимножества.
     c_hash_multiset_delete(hash_multiset, NULL);
