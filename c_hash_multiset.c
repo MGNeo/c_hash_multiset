@@ -706,7 +706,7 @@ size_t c_hash_multiset_uniques_count(const c_hash_multiset *const _hash_multiset
     return _hash_multiset->uniques_count;
 }
 
-// Возвращает коэф. максимальной загрузки.
+// Возвращает коэф. максимальной загрузки хэш-мультимножества.
 // В случае ошибки возвращает 0.0f.
 float c_hash_multiset_max_load_factor(const c_hash_multiset *const _hash_multiset)
 {
