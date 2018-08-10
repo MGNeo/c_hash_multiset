@@ -141,7 +141,7 @@ ptrdiff_t c_hash_multiset_delete(c_hash_multiset *const _hash_multiset,
 }
 
 // Вставка данных в хэш-мультимножество.
-// В случае успешной вставки возвращает > 0.
+// В случае успешной вставки возвращает > 0, а данные захватываются хэш-мультимножеством.
 // В случае ошибки возвращает < 0.
 ptrdiff_t c_hash_multiset_insert(c_hash_multiset *const _hash_multiset,
                                  const void *const _data)
