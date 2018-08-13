@@ -444,7 +444,7 @@ ptrdiff_t c_hash_multiset_check(const c_hash_multiset *const _hash_multiset,
     return 0;
 }
 
-// Проверяет количество заданных данных в хэш-мультимножестве.
+// Возвращает количество заданных данных в хэш-мультимножестве.
 // В случае успеха возвращает количество заданных данных (включая 0, если данных нет).
 // В случае ошибки возвращае 0.
 size_t c_hash_multiset_count(const c_hash_multiset *const _hash_multiset,
