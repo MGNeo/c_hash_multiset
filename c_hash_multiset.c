@@ -525,66 +525,57 @@ ptrdiff_t c_hash_multiset_clear(c_hash_multiset *const _hash_multiset,
     if (_hash_multiset->uniques_count == 0) return 0;
 
     size_t count = _hash_multiset->uniques_count;
+
+    // Макросы дублирования кода для исключения првоерок из циклов.
+
+    // Открытие циклов.
+    #define C_HASH_MULTISET_CLEAR_BEGIN\
+    for (size_t s = 0; (s < _hash_multiset->slots_count)&&(count > 0); ++s)\
+    {\
+        if (_hash_multiset->slots[s] != NULL)\
+        {\
+            c_hash_multiset_chain *select_chain = _hash_multiset->slots[s],\
+                                  *delete_chain;\
+            while (select_chain != NULL)\
+            {\
+                delete_chain = select_chain;\
+                select_chain = select_chain->next_chain;\
+                c_hash_multiset_node *select_node = delete_chain->head,\
+                                     *delete_node;\
+                while (select_node != NULL)\
+                {\
+                    delete_node = select_node;\
+                    select_node = select_node->next_node;
+
+    // Закрытие циклов.
+    #define C_HASH_MULTISET_CLEAR_END\
+                    free(delete_node);\
+                }\
+                free(delete_chain);\
+                --count;\
+            }\
+            _hash_multiset->slots[s] = NULL;\
+        }\
+    }
+
+    // Функция удаления данных задана.
     if (_del_data != NULL)
     {
-        for (size_t s = 0; (s < _hash_multiset->slots_count)&&(count > 0); ++s)
-        {
-            if (_hash_multiset->slots[s] != NULL)
-            {
-                c_hash_multiset_chain *select_chain = _hash_multiset->slots[s],
-                                      *delete_chain;
+        C_HASH_MULTISET_CLEAR_BEGIN
 
-                while (select_chain != NULL)
-                {
-                    delete_chain = select_chain;
-                    select_chain = select_chain->next_chain;
+        _del_data( delete_node->data );
 
-                    c_hash_multiset_node *select_node = delete_chain->head,
-                                         *delete_node;
-                    while (select_node != NULL)
-                    {
-                        delete_node = select_node;
-                        select_node = select_node->next_node;
-
-                        _del_data( delete_node->data );
-                        free(delete_node);
-                    }
-                    free(delete_chain);
-                    --count;
-                }
-                _hash_multiset->slots[s] = NULL;
-            }
-        }
+        C_HASH_MULTISET_CLEAR_END
     } else {
-        // Дублирование кода для того, чтобы на каждом узле не проверять,
-        // задана ли функция удаления данных.
-        for (size_t s = 0; (s < _hash_multiset->slots_count)&&(count > 0); ++s)
-        {
-            if (_hash_multiset->slots[s] != NULL)
-            {
-                c_hash_multiset_chain *select_chain = _hash_multiset->slots[s],
-                                      *delete_chain;
-                while (select_chain != NULL)
-                {
-                    delete_chain = select_chain;
-                    select_chain = select_chain->next_chain;
+        // Функция удаления данных не задана.
+        C_HASH_MULTISET_CLEAR_BEGIN
 
-                    c_hash_multiset_node *select_node = delete_chain->head,
-                                         *delete_node;
-                    while (select_node != NULL)
-                    {
-                        delete_node = select_node;
-                        select_node = select_node->next_node;
-
-                        free(delete_node);
-                    }
-                    free(delete_chain);
-                    --count;
-                }
-                _hash_multiset->slots[s] = NULL;
-            }
-        }
+        C_HASH_MULTISET_CLEAR_END
     }
+
+    #undef C_HASH_MULTISET_CLEAR_BEGIN
+    #undef C_HASH_MULTISET_CLEAR_END
+
     return 1;
 }
 
@@ -621,28 +612,38 @@ ptrdiff_t c_hash_multiset_erase_all(c_hash_multiset *const _hash_multiset,
                     // Удаляем заданную цепь из хэш-мультимножества.
                     c_hash_multiset_node *select_node = select_chain->head,
                                          *delete_node;
-                    // Сперва удаляем все узлы цепи.
+
+                    // Макросы дублирования кода для исключения проверки из цикла.
+
+                    // Открытие цикла.
+                    #define C_HASH_MULTISET_ERASE_ALL_BEGIN\
+                    while (select_node != NULL)\
+                    {\
+                        delete_node = select_node;\
+                        select_node = select_node->next_node;
+
+                    // Закрытие цикла.
+                    #define C_HASH_MULTISET_ERASE_ALL_END\
+                        free(delete_node);\
+                    }
+
+                    // Функция удаления данных узла задана.
                     if (_del_data != NULL)
                     {
-                        while (select_node != NULL)
-                        {
-                            delete_node = select_node;
-                            select_node = select_node->next_node;
+                        C_HASH_MULTISET_ERASE_ALL_BEGIN
 
-                            _del_data( delete_node->data );
-                            free(delete_node);
-                        }
+                        _del_data( delete_node->data );
+
+                        C_HASH_MULTISET_ERASE_ALL_END
                     } else {
-                        // Дублирование кода, чтобы на каждом узле не проверять,
-                        // задана ли функция удаления.
-                        while (select_node != NULL)
-                        {
-                            delete_node = select_node;
-                            select_node = select_node->next_node;
+                        // Функция удаления данных узла не задана.
+                        C_HASH_MULTISET_ERASE_ALL_BEGIN
 
-                            free(delete_node);
-                        }
+                        C_HASH_MULTISET_ERASE_ALL_END
                     }
+
+                    #undef C_HASH_MULTISET_ERASE_ALL_BEGIN
+                    #undef C_HASH_MULTISET_ERASE_ALL_END
 
                     // Уникальных цепей стало меньше на одну.
                     --_hash_multiset->uniques_count;
