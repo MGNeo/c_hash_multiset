@@ -92,20 +92,20 @@ int main(int argc, char **argv)
     size_t count;
 
     have = c_hash_multiset_check(hash_multiset, string_a);
-    count = c_hash_multiset_count(hash_multiset, string_a);
-    printf("string_a[Good] have/count: %Id/%Iu\n", have, count);
+    count = c_hash_multiset_data_count(hash_multiset, string_a);
+    printf("%s have/count: %Id/%Iu\n", string_a, have, count);
 
     have = c_hash_multiset_check(hash_multiset, string_b);
-    count = c_hash_multiset_count(hash_multiset, string_b);
-    printf("string_b[Wall] have/count: %Id/%Iu\n", have, count);
+    count = c_hash_multiset_data_count(hash_multiset, string_b);
+    printf("%s have/count: %Id/%Iu\n", string_b, have, count);
 
     have = c_hash_multiset_check(hash_multiset, string_c);
-    count = c_hash_multiset_count(hash_multiset, string_c);
-    printf("string_c[Area] have/count: %Id/%Iu\n\n", have, count);
+    count = c_hash_multiset_data_count(hash_multiset, string_c);
+    printf("%s have/count: %Id/%Iu\n\n", string_c, have, count);
 
     // Покажем общую информацию.
     printf("slots count: %Iu\n", c_hash_multiset_slots_count(hash_multiset));
-    printf("nodes count: %Iu\n", c_hash_multiset_nodes_count(hash_multiset));
+    printf("nodes count: %Iu\n", c_hash_multiset_count(hash_multiset));
     printf("uniques count: %Iu\n", c_hash_multiset_uniques_count(hash_multiset));
 
     // Удаление хэш-мультимножества.

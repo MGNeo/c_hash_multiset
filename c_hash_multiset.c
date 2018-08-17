@@ -447,8 +447,8 @@ ptrdiff_t c_hash_multiset_check(const c_hash_multiset *const _hash_multiset,
 // Возвращает количество заданных данных в хэш-мультимножестве.
 // В случае успеха возвращает количество заданных данных (включая 0, если данных нет).
 // В случае ошибки возвращае 0.
-size_t c_hash_multiset_count(const c_hash_multiset *const _hash_multiset,
-                             const void *const _data)
+size_t c_hash_multiset_data_count(const c_hash_multiset *const _hash_multiset,
+                                  const void *const _data)
 {
     if (_hash_multiset == NULL) return 0;
     if (_data == NULL) return 0;
@@ -685,7 +685,7 @@ size_t c_hash_multiset_slots_count(const c_hash_multiset *const _hash_multiset)
 
 // Возвращает количество узлов (объектов) в хэш-мультимножестве.
 // В случае ошибки возвращает 0.
-size_t c_hash_multiset_nodes_count(const c_hash_multiset *const _hash_multiset)
+size_t c_hash_multiset_count(const c_hash_multiset *const _hash_multiset)
 {
     if (_hash_multiset == NULL)
     {
