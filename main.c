@@ -105,7 +105,7 @@ int main(int argc, char **argv)
 
     // Покажем общую информацию.
     printf("slots count: %Iu\n", c_hash_multiset_slots_count(hash_multiset));
-    printf("nodes count: %Iu\n", c_hash_multiset_count(hash_multiset));
+    printf("count: %Iu\n", c_hash_multiset_count(hash_multiset));
     printf("uniques count: %Iu\n", c_hash_multiset_uniques_count(hash_multiset));
 
     // Удаление хэш-мультимножества.
