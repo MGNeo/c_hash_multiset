@@ -100,11 +100,11 @@ int main(int argc, char **argv)
         }
     }
 
-    // Удалим элемент string_1.
+    // Удалим элемент string_2.
     {
-        const ptrdiff_t r_code = c_hash_multiset_erase(hash_multiset, string_1, NULL);
+        const ptrdiff_t r_code = c_hash_multiset_erase(hash_multiset, string_2, NULL);
         // Покажем результат операции.
-        printf("erase[%s]: %Id\n", string_1, r_code);
+        printf("erase[%s]: %Id\n", string_2, r_code);
     }
 
     // При помощи обхода хэш-мультимножества выведем содержимое каждого элемента.
@@ -116,7 +116,36 @@ int main(int argc, char **argv)
             printf("for each error, r_code: %Id\n", r_code);
             printf("Program end.\n");
             getchar();
-            return -2;
+            return -3;
+        }
+    }
+
+    // Удалим все string_1.
+    {
+        error = 0;
+        const size_t d_count = c_hash_multiset_erase_all(hash_multiset, string_1, NULL, &error);
+        // Если возникла ошибка, покажем ее.
+        if ( (d_count == 0) && (error > 0) )
+        {
+            printf("erase all error: %Iu\n", error);
+            printf("Program end.\n");
+            getchar();
+            return -4;
+        }
+        // Покажем, сколько элементов было удалено.
+        printf("erase[%s]: %Iu\n", string_1, d_count);
+    }
+
+    // При помощи обхода хэш-мультимножества выведем содержимое каждого элемента.
+    {
+        const ptrdiff_t r_code = c_hash_multiset_for_each(hash_multiset, print_data_s);
+        // Если возникла ошибка, покажем причину.
+        if (r_code < 0)
+        {
+            printf("for each error, r_code: %Id\n", r_code);
+            printf("Program end.\n");
+            getchar();
+            return -5;
         }
     }
 
@@ -129,7 +158,7 @@ int main(int argc, char **argv)
             printf("delete error, r_code: %Id\n", r_code);
             printf("Program end.\n");
             getchar();
-            return -3;
+            return -6;
         }
     }
 

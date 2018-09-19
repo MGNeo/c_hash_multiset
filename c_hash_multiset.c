@@ -616,17 +616,31 @@ ptrdiff_t c_hash_multiset_clear(c_hash_multiset *const _hash_multiset,
 }
 
 // Удаляет из хэш-мультимножества все единицы заданных данных.
-// В случае успешного удаления возвращает > 0.
-// Если заданных данных в хэш-мультимножестве не оказалось, то возвращает 0.
-// В случае ошибки возвращает < 0.
-ptrdiff_t c_hash_multiset_erase_all(c_hash_multiset *const _hash_multiset,
-                                    const void *const _data,
-                                    void (* const _del_data)(void *const _data))
+// Возвращает количество удаленных элементов.
+// В случае ошибки возвращает 0, и если _error != NULL, в заданное расположение помещается
+// код причины ошибки (> 0).
+// Так как функция может возвращать 0 и в случае успеха, и в случае ошибки, для детектирования ошибки
+// перед вызовом функции необходимо поместить 0 в заданное расположение ошибки.
+size_t c_hash_multiset_erase_all(c_hash_multiset *const _hash_multiset,
+                                 const void *const _data,
+                                 void (* const _del_data)(void *const _data),
+                                 size_t *const _error)
 {
-    if (_hash_multiset == NULL) return -1;
-    if (_data == NULL) return -2;
+    if (_hash_multiset == NULL)
+    {
+        error_set(_error, 1);
+        return 0;
+    }
+    if (_data == NULL)
+    {
+        error_set(_error, 2);
+        return 0;
+    }
 
-    if (_hash_multiset->uniques_count == 0) return 0;
+    if (_hash_multiset->uniques_count == 0)
+    {
+        return 0;
+    }
 
     // Неприведенный хэш заданных данных.
     const size_t hash = _hash_multiset->hash_data(_data);
@@ -685,6 +699,8 @@ ptrdiff_t c_hash_multiset_erase_all(c_hash_multiset *const _hash_multiset,
                     --_hash_multiset->uniques_count;
                     // Элементов в хэш-мультимножестве стало меньше на количество элементов удаляемой цепи.
                     _hash_multiset->nodes_count -= select_chain->count;
+                    // Запоминаем, сколько элементов было удалено.
+                    const size_t count = select_chain->count;
 
                     // Ампутация цепи.
                     if (prev_chain != NULL)
@@ -696,7 +712,7 @@ ptrdiff_t c_hash_multiset_erase_all(c_hash_multiset *const _hash_multiset,
 
                     free(select_chain);
 
-                    return 1;
+                    return count;
                 }
             }
             prev_chain = select_chain;

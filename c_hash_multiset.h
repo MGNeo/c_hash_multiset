@@ -52,9 +52,10 @@ ptrdiff_t c_hash_multiset_for_each(const c_hash_multiset *const _hash_multiset,
 ptrdiff_t c_hash_multiset_clear(c_hash_multiset *const _hash_multiset,
                                 void (*const _del_data)(void *const _data));
 
-ptrdiff_t c_hash_multiset_erase_all(c_hash_multiset *const _hash_multiset,
-                                    const void *const _data,
-                                    void (*const _del_data)(void *const _data));
+size_t c_hash_multiset_erase_all(c_hash_multiset *const _hash_multiset,
+                                 const void *const _data,
+                                 void (*const _del_data)(void *const _data),
+                                 size_t *const _error);
 
 size_t c_hash_multiset_slots_count(const c_hash_multiset *const _hash_multiset,
                                    size_t *const _error);
