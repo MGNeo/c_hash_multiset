@@ -4,9 +4,7 @@
 
 #include "c_hash_multiset.h"
 
-// Проверка возвращаемых значений не выполняется для упрощения.
-
-// Функция генерации хэша по данным-строке.
+// Функция генерации хэша по элементу-строке.
 size_t hash_data_s(const void *const _data)
 {
     if (_data == NULL)return 0;
@@ -19,7 +17,7 @@ size_t hash_data_s(const void *const _data)
     return hash;
 }
 
-// Функция детального сравнения данных-строк.
+// Функция детального сравнения элементов-строк.
 size_t comp_data_s(const void *const _key_a,
                    const void *const _key_b)
 {
@@ -39,7 +37,7 @@ size_t comp_data_s(const void *const _key_a,
     return 0;
 }
 
-// Функция вывода данных-строки.
+// Функция вывода элементов-строки.
 void print_data_s(const void *const _data)
 {
     if (_data == NULL) return;
@@ -50,68 +48,91 @@ void print_data_s(const void *const _data)
 
 int main(int argc, char **argv)
 {
-    // Создание хэш-мультимножества.
-    c_hash_multiset *hash_multiset = c_hash_multiset_create(hash_data_s,
-                                                            comp_data_s,
-                                                            11,
-                                                            0.5f);
+    size_t error;
+    c_hash_multiset *hash_multiset;
 
-    // Вставка в хэш-мультимножества нескольких элементов.
-    // Некоторые повторяются.
-    const char *const string_a = "Good";
-    const char *const string_b = "Wall";
-    const char *const string_c = "Area";
+    // Попытаемся создать хэш-мультимножество.
+    hash_multiset = c_hash_multiset_create(hash_data_s, comp_data_s, 10, 0.5f, &error);
+    // Если возникла ошибка, покажем ее.
+    if (hash_multiset == NULL)
+    {
+        printf("create error: %Iu\n", error);
+        printf("Program end.\n");
+        getchar();
+        return -1;
+    }
 
-    c_hash_multiset_insert(hash_multiset, string_a);
-    c_hash_multiset_insert(hash_multiset, string_b);
-    c_hash_multiset_insert(hash_multiset, string_b);
-    c_hash_multiset_insert(hash_multiset, string_c);
-    c_hash_multiset_insert(hash_multiset, string_c);
-    c_hash_multiset_insert(hash_multiset, string_c);
+    // Вставим в хэш-мультимножество несколько элементов.
+    const char *const string_1 = "One";
+    const char *const string_2 = "Two";
+    const char *const string_3 = "Three";
+    {
+        const ptrdiff_t r_code = c_hash_multiset_insert(hash_multiset, string_1);
+        // Покажем результат операции.
+        printf("insert[%s]: %Id\n", string_1, r_code);
+    }
+    {
+        const ptrdiff_t r_code = c_hash_multiset_insert(hash_multiset, string_2);
+        // Покажем результат операции.
+        printf("insert[%s]: %Id\n", string_2, r_code);
+    }
+    {
+        const ptrdiff_t r_code = c_hash_multiset_insert(hash_multiset, string_3);
+        // Покажем результат операции.
+        printf("insert[%s]: %Id\n", string_3, r_code);
+    }
+    {
+        const ptrdiff_t r_code = c_hash_multiset_insert(hash_multiset, string_1);
+        // Покажем результат операции.
+        printf("insert[%s]: %Id\n", string_1, r_code);
+    }
 
-    // Вывод содержимого хэш-мультимножества.
-    c_hash_multiset_for_each(hash_multiset, print_data_s);
-    printf("\n");
+    // При помощи обхода хэш-мультимножества выведем содержимое каждого элемента.
+    {
+        const ptrdiff_t r_code = c_hash_multiset_for_each(hash_multiset, print_data_s);
+        // Если возникла ошибка, покажем причину.
+        if (r_code < 0)
+        {
+            printf("for each error, r_code: %Id\n", r_code);
+            printf("Program end.\n");
+            getchar();
+            return -2;
+        }
+    }
 
-    // Удаление одного (уникального в своем роде) элемента.
-    c_hash_multiset_erase(hash_multiset, string_a, NULL);
+    // Удалим элемент string_1.
+    {
+        const ptrdiff_t r_code = c_hash_multiset_erase(hash_multiset, string_1, NULL);
+        // Покажем результат операции.
+        printf("erase[%s]: %Id\n", string_1, r_code);
+    }
 
-    // Вывод содержимого хэш-мультимножества.
-    c_hash_multiset_for_each(hash_multiset, print_data_s);
-    printf("\n");
+    // При помощи обхода хэш-мультимножества выведем содержимое каждого элемента.
+    {
+        const ptrdiff_t r_code = c_hash_multiset_for_each(hash_multiset, print_data_s);
+        // Если возникла ошибка, покажем причину.
+        if (r_code < 0)
+        {
+            printf("for each error, r_code: %Id\n", r_code);
+            printf("Program end.\n");
+            getchar();
+            return -2;
+        }
+    }
 
-    // Удаление всех копий заданного элемента.
-    c_hash_multiset_erase_all(hash_multiset, string_c, NULL);
-
-    // Вывод содержимого хэш-мультимножества.
-    c_hash_multiset_for_each(hash_multiset, print_data_s);
-    printf("\n");
-
-    // Проверка наличия и количества элементов в хэш-мультимножестве.
-    ptrdiff_t have;
-    size_t count;
-
-    have = c_hash_multiset_check(hash_multiset, string_a);
-    count = c_hash_multiset_data_count(hash_multiset, string_a);
-    printf("%s have/count: %Id/%Iu\n", string_a, have, count);
-
-    have = c_hash_multiset_check(hash_multiset, string_b);
-    count = c_hash_multiset_data_count(hash_multiset, string_b);
-    printf("%s have/count: %Id/%Iu\n", string_b, have, count);
-
-    have = c_hash_multiset_check(hash_multiset, string_c);
-    count = c_hash_multiset_data_count(hash_multiset, string_c);
-    printf("%s have/count: %Id/%Iu\n\n", string_c, have, count);
-
-    // Покажем общую информацию.
-    printf("slots count: %Iu\n", c_hash_multiset_slots_count(hash_multiset));
-    printf("count: %Iu\n", c_hash_multiset_count(hash_multiset));
-    printf("uniques count: %Iu\n", c_hash_multiset_uniques_count(hash_multiset));
-
-    // Удаление хэш-мультимножества.
-    c_hash_multiset_delete(hash_multiset, NULL);
+    // Удалим хэш-мультимножество.
+    {
+        const ptrdiff_t r_code = c_hash_multiset_delete(hash_multiset, NULL);
+        // Если возникла ошибка, покажем причину.
+        if (r_code < 0)
+        {
+            printf("delete error, r_code: %Id\n", r_code);
+            printf("Program end.\n");
+            getchar();
+            return -3;
+        }
+    }
 
     getchar();
-
     return 0;
 }

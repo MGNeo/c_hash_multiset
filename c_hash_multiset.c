@@ -65,20 +65,41 @@ struct s_c_hash_multiset
     c_hash_multiset_chain **slots;
 };
 
+// Если расположение задано, в него помещается код.
+static void error_set(size_t *const _error,
+                      const size_t _code)
+{
+    if (_error != NULL)
+    {
+        *_error = _code;
+    }
+}
+
 // Создает новое хэш-мультимножество.
 // Позволяет создавать хэш-мультимножество с нулем слотов.
-// В случае успеха возвращает указатель на созданное хэш-мультимножество, иначе NULL.
+// В случае ошибки возвращает NULL, и если _error != NULL, в заданное расположение помещается
+// код причины ошибки (> 0).
 c_hash_multiset *c_hash_multiset_create(size_t (*const _hash_data)(const void *const _data),
                                         size_t (*const _comp_data)(const void *const _data_a,
                                                                    const void *const _data_b),
                                         const size_t _slots_count,
-                                        const float _max_load_factor)
+                                        const float _max_load_factor,
+                                        size_t *const _error)
 {
-    if (_hash_data == NULL) return NULL;
-    if (_comp_data == NULL) return NULL;
+    if (_hash_data == NULL)
+    {
+        error_set(_error, 1);
+        return NULL;
+    }
+    if (_comp_data == NULL)
+    {
+        error_set(_error, 2);
+        return NULL;
+    }
     if ( (_max_load_factor < C_HASH_MULTISET_MLF_MIN) ||
          (_max_load_factor > C_HASH_MULTISET_MLF_MAX) )
     {
+        error_set(_error, 3);
         return NULL;
     }
 
@@ -90,22 +111,25 @@ c_hash_multiset *c_hash_multiset_create(size_t (*const _hash_data)(const void *c
         if ( (new_slots_size == 0) ||
              (new_slots_size / _slots_count != sizeof(c_hash_multiset_chain*)) )
         {
+            error_set(_error, 4);
             return NULL;
         }
 
-        new_slots = (c_hash_multiset_chain**)malloc(new_slots_size);
+        new_slots = malloc(new_slots_size);
         if (new_slots == NULL)
         {
+            error_set(_error, 5);
             return NULL;
         }
 
         memset(new_slots, 0, new_slots_size);
     }
 
-    c_hash_multiset *const new_hash_multiset = (c_hash_multiset*)malloc(sizeof(c_hash_multiset));
+    c_hash_multiset *const new_hash_multiset = malloc(sizeof(c_hash_multiset));
     if (new_hash_multiset == NULL)
     {
         free(new_slots);
+        error_set(_error, 6);
         return NULL;
     }
 
@@ -124,7 +148,8 @@ c_hash_multiset *c_hash_multiset_create(size_t (*const _hash_data)(const void *c
 }
 
 // Удаляет хэш-мультимножество.
-// В случае успеха возвращает > 0, иначе < 0.
+// В случае успеха возвращает > 0.
+// В случае ошибки возвращает < 0.
 ptrdiff_t c_hash_multiset_delete(c_hash_multiset *const _hash_multiset,
                                  void (*const _del_data)(void *const _data))
 {
@@ -212,7 +237,7 @@ ptrdiff_t c_hash_multiset_insert(c_hash_multiset *const _hash_multiset,
     {
         created = 1;
         // Попытаемся создать цепочку.
-        c_hash_multiset_chain *const new_chain = (c_hash_multiset_chain*)malloc(sizeof(c_hash_multiset_chain));
+        c_hash_multiset_chain *const new_chain = malloc(sizeof(c_hash_multiset_chain));
         if (new_chain == NULL)
         {
             return -7;
@@ -238,7 +263,7 @@ ptrdiff_t c_hash_multiset_insert(c_hash_multiset *const _hash_multiset,
     // потому что пустая цепочка не должна существовать.
 
     // Попытаемся выделить память под узел.
-    c_hash_multiset_node *const new_node = (c_hash_multiset_node*)malloc(sizeof(c_hash_multiset_node));
+    c_hash_multiset_node *const new_node = malloc(sizeof(c_hash_multiset_node));
     if (new_node == NULL)
     {
         if (created == 1)
@@ -363,7 +388,7 @@ ptrdiff_t c_hash_multiset_resize(c_hash_multiset *const _hash_multiset,
             return -3;
         }
 
-        c_hash_multiset_chain **const new_slots = (c_hash_multiset_chain**)malloc(new_slots_size);
+        c_hash_multiset_chain **const new_slots = malloc(new_slots_size);
         if (new_slots == NULL)
         {
             return -4;
@@ -445,13 +470,24 @@ ptrdiff_t c_hash_multiset_check(const c_hash_multiset *const _hash_multiset,
 }
 
 // Возвращает количество заданных данных в хэш-мультимножестве.
-// В случае успеха возвращает количество заданных данных (включая 0, если данных нет).
-// В случае ошибки возвращае 0.
+// В случае ошибки возвращает 0, и если _error != NULL, в заданное расположение помещается
+// код причины ошибки (> 0).
+// Так как функция может возвращать 0 и в случае успеха, и в случае ошибки, для детектирования ошибки
+// перед вызовом функции необходимо поместить 0 в заданное расположение ошибки.
 size_t c_hash_multiset_data_count(const c_hash_multiset *const _hash_multiset,
-                                  const void *const _data)
+                                  const void *const _data,
+                                  size_t *const _error)
 {
-    if (_hash_multiset == NULL) return 0;
-    if (_data == NULL) return 0;
+    if (_hash_multiset == NULL)
+    {
+        error_set(_error, 1);
+        return 0;
+    }
+    if (_data == NULL)
+    {
+        error_set(_error, 2);
+        return 0;
+    }
 
     if (_hash_multiset->uniques_count == 0) return 0;
 
@@ -672,11 +708,16 @@ ptrdiff_t c_hash_multiset_erase_all(c_hash_multiset *const _hash_multiset,
 }
 
 // Возвращает количество слотов в хэш-мультимножестве.
-// В случае ошибки возвращает 0.
-size_t c_hash_multiset_slots_count(const c_hash_multiset *const _hash_multiset)
+// В случае ошибки возвращает 0, и если _error != NULL, в заданное расположение помещается
+// код причины ошибки (> 0).
+// Так как функция может возвращать 0 и в случае успеха, и в случае ошибки, для детектирования ошибки
+// перед вызовом функции необходимо поместить 0 в заданное расположение ошибки.
+size_t c_hash_multiset_slots_count(const c_hash_multiset *const _hash_multiset,
+                                   size_t *const _error)
 {
     if (_hash_multiset == NULL)
     {
+        error_set(_error, 1);
         return 0;
     }
 
@@ -684,11 +725,16 @@ size_t c_hash_multiset_slots_count(const c_hash_multiset *const _hash_multiset)
 }
 
 // Возвращает количество узлов (объектов) в хэш-мультимножестве.
-// В случае ошибки возвращает 0.
-size_t c_hash_multiset_count(const c_hash_multiset *const _hash_multiset)
+// В случае ошибки возвращает 0, и если _error != NULL, в заданное расположение помещается
+// код причины ошибки (> 0).
+// Так как функция может возвращать 0 и в случае успеха, и в случае ошибки, для детектирования ошибки
+// перед вызовом функции необходимо поместить 0 в заданное расположение ошибки.
+size_t c_hash_multiset_count(const c_hash_multiset *const _hash_multiset,
+                             size_t *const _error)
 {
     if (_hash_multiset == NULL)
     {
+        error_set(_error, 1);
         return 0;
     }
 
@@ -696,11 +742,16 @@ size_t c_hash_multiset_count(const c_hash_multiset *const _hash_multiset)
 }
 
 // Возвращает количество уникальных объектов в хэш-мультимножестве.
-// В случае ошибки возвращает 0.
-size_t c_hash_multiset_uniques_count(const c_hash_multiset *const _hash_multiset)
+// В случае ошибки возвращает 0, и если _error != NULL, в заданное расположение помещается
+// код причины ошибки (> 0).
+// Так как функция может возвращать 0 и в случае успеха, и в случае ошибки, для детектирования ошибки
+// перед вызовом функции необходимо поместить 0 в заданное расположение ошибки.
+size_t c_hash_multiset_uniques_count(const c_hash_multiset *const _hash_multiset,
+                                     size_t *const _error)
 {
     if (_hash_multiset == NULL)
     {
+        error_set(_error, 1);
         return 0;
     }
 
