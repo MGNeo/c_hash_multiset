@@ -133,7 +133,7 @@ int main(int argc, char **argv)
             return -4;
         }
         // Покажем, сколько элементов было удалено.
-        printf("erase[%s]: %Iu\n", string_1, d_count);
+        printf("erase all[%s]: %Iu\n", string_1, d_count);
     }
 
     // При помощи обхода хэш-мультимножества выведем содержимое каждого элемента.
