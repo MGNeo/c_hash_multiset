@@ -23,7 +23,7 @@
 // расширении.
 #define C_HASH_MULTISET_0 ( (size_t) 1024 )
 
-// Манимально возможное значение max_load_factor.
+// Минимально возможное значение max_load_factor.
 #define C_HASH_MULTISET_MLF_MIN ( (float) 0.01f )
 
 // Максимально возможное значение max_load_factor.
